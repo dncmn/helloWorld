@@ -1,0 +1,95 @@
+syntax = "proto3";
+package helloworld;
+
+service User{
+    rpc Register(RegisterRequest) returns (RegisterReply) ; // 用户注册
+    rpc Login(LoginRequest) returns (LoginReply); // 用户登录
+    rpc UserByUID(UserByUIDRequest)returns (UserByUIDReply) ; // 根据uid获取用户信息
+}
+
+
+message UserByUIDRequest{
+    string uid=1;
+}
+message UserByUIDReply{
+   UserInfo user=1;
+  UserRole userRole=2;
+}
+
+message UserInfo{
+    string id=1;
+    string deviceID=2;
+    uint64 level=3;
+    uint64 energy=4;
+    uint64 appUID=5;
+    string nickname=6;
+    string avatar=7;
+    int32 age=8;
+    int32 sex=9;
+    string profile=10;
+    int64 country=11;
+    string city=12;
+    uint64 count=13;
+    uint64 newGuidance=14;
+}
+
+
+message LoginRequest{
+    string username = 1;
+    uint64 clientDate = 2;
+    string deviceNew=3;
+    string platform=4;
+    string version=5;
+    string password=6;
+    string device=7;
+    string gameDeviceID=8;
+    int64 country=9;
+}
+
+
+
+
+message LoginReply{
+    string uid =1;
+    uint64 appUserID=2;
+    UserRole userRole=3;
+    EquipResp   wearingEquip=4;
+    repeated ShopItemInfo equip_list=5;
+}
+
+
+message ShopItemInfo{
+    int64 item_id=1;
+    int64 price=2;
+    bool is_buy=3;
+}
+
+// 返回得装备信息列表
+message EquipResp{
+    repeated EquipInfo equipList=1;
+    uint64 plastommerID=2;
+}
+
+// 一件装备的详细信息
+message EquipInfo{
+    int64 itemType=1;
+    int64 itemID=2;
+}
+
+message UserRole{
+    uint64 emotionID =1;
+    uint64 modelID=2;
+}
+
+
+
+message RegisterRequest{
+    string username=1;
+    string password=2;
+    int32 country=3;
+    string phone_num=4;
+}
+
+message RegisterReply{
+    string uid =1;
+}
