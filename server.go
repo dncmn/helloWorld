@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"golang.org/x/net/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -12,6 +13,7 @@ import (
 	"google.golang.org/grpc/status"
 	pb "helloWorld/pb"
 	"net"
+	"net/http"
 	"strings"
 )
 
@@ -120,6 +122,7 @@ func (s *server) CanUpdate(ctx context.Context, in *pb.CanUpdateRequest) (resp *
 }
 
 func main() {
+	grpc.EnableTracing = true
 	var (
 		opts []grpc.ServerOption
 	)
@@ -148,11 +151,25 @@ func main() {
 	opts = append(opts, grpc.UnaryInterceptor(interceptor))
 
 	s := grpc.NewServer(opts...)
+	// 注册 GreeterService
 	pb.RegisterGreeterServer(s, &server{})
+	// 注册 UserService
 	pb.RegisterUserServer(s, &user{})
 	grpclog.Infof("Listen on %s with TLS", port)
+
+	// 开启trace
+	go startTrace()
 	err = s.Serve(lis)
 	if err != nil {
 		grpclog.Fatal(err)
 	}
+}
+
+func startTrace() {
+	trace.AuthRequest = func(req *http.Request) (any, sensitive bool) {
+		return true, true
+	}
+
+	go http.ListenAndServe(":50052", nil)
+	grpclog.Infoln("Trace listen on 50052")
 }
