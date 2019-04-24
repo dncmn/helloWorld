@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/grpclog"
 	pb "helloWorld/pb"
-	"log"
 )
 
 const (
@@ -19,11 +19,11 @@ func main() {
 	// TLS连接
 	creds, err := credentials.NewClientTLSFromFile("./ssl/server.pem", "CN")
 	if err != nil {
-		log.Fatal(err)
+		grpclog.Fatal(err)
 	}
 	conn, err := grpc.Dial(address, grpc.WithTransportCredentials(creds))
 	if err != nil {
-		log.Fatal(err)
+		grpclog.Fatal(err)
 	}
 	defer conn.Close()
 	//c := pb.NewGreeterClient(conn)
@@ -62,7 +62,7 @@ func main() {
 	u := pb.NewUserClient(conn)
 	r, err := u.Register(context.Background(), &pb.RegisterRequest{Username: "manan", Password: "123456", Country: 1, PhoneNum: "15737345574"})
 	if err != nil {
-		log.Fatal(err)
+		grpclog.Fatal(err)
 		return
 	}
 	fmt.Println(r.Uid)

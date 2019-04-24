@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/grpclog"
 	pb "helloWorld/pb"
-	"log"
 	"net"
 	"strings"
 )
@@ -77,20 +77,20 @@ func (s *server) CanUpdate(ctx context.Context, in *pb.CanUpdateRequest) (resp *
 func main() {
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
-		log.Fatal(err)
+		grpclog.Fatal(err)
 	}
 
 	// 添加TLS认证
 	creds, err := credentials.NewServerTLSFromFile("./ssl/server.pem", "./ssl/server.key")
 	if err != nil {
-		log.Fatal(err)
+		grpclog.Fatal(err)
 	}
 	s := grpc.NewServer(grpc.Creds(creds))
 	pb.RegisterGreeterServer(s, &server{})
 	pb.RegisterUserServer(s, &user{})
+	grpclog.Infof("Listen on %s with TLS", port)
 	err = s.Serve(lis)
 	if err != nil {
-		log.Fatal(err)
+		grpclog.Fatal(err)
 	}
-	fmt.Println("grpc server is running....")
 }
