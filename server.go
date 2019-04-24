@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	pb "helloWorld/pb"
 	"log"
 	"net"
@@ -78,7 +79,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	s := grpc.NewServer()
+
+	// 添加TLS认证
+	creds, err := credentials.NewServerTLSFromFile("./ssl/server.pem", "./ssl/server.key")
+	if err != nil {
+		log.Fatal(err)
+	}
+	s := grpc.NewServer(grpc.Creds(creds))
 	pb.RegisterGreeterServer(s, &server{})
 	pb.RegisterUserServer(s, &user{})
 	err = s.Serve(lis)
