@@ -52,11 +52,35 @@ func (s *server) CanSet(ctx context.Context, in *pb.CanSetRequest) (*pb.CanSetRe
 
 type user struct{}
 
+// 这个方法里面的token认证，只是保存在某个方法里面的，如果有大量方法的话，在每个方法里面写大量的认证很麻烦
 func (u *user) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.RegisterReply, error) {
 
+	//md, ok := metadata.FromIncomingContext(ctx)
+	//if !ok {
+	//	return nil, status.Errorf(codes.Unauthenticated, "无Token认证信息")
+	//}
+	//var (
+	//	appuid string
+	//	appkey string
+	//)
+	//if val, ok := md["appuid"]; ok {
+	//	appuid = val[0]
+	//}
+	//if val, ok := md["appkey"]; ok {
+	//	appkey = val[0]
+	//}
+	//if appuid != "100" || appkey != "i am key" {
+	//	return nil, status.Errorf(codes.Unauthenticated, "Token认证失败")
+	//}
+
+	return &pb.RegisterReply{Uid: "token认证成功"}, nil
+}
+
+// auth 验证Token
+func auth(ctx context.Context) error {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return nil, status.Errorf(codes.Unauthenticated, "无Token认证信息")
+		return status.Errorf(codes.Unauthenticated, "无Token认证信息")
 	}
 	var (
 		appuid string
@@ -69,10 +93,9 @@ func (u *user) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.Regist
 		appkey = val[0]
 	}
 	if appuid != "100" || appkey != "i am key" {
-		return nil, status.Errorf(codes.Unauthenticated, "Token认证失败")
+		return status.Errorf(codes.Unauthenticated, "Token认证失败")
 	}
-
-	return &pb.RegisterReply{Uid: "token认证成功"}, nil
+	return nil
 }
 
 func (u *user) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginReply, error) {
@@ -97,6 +120,9 @@ func (s *server) CanUpdate(ctx context.Context, in *pb.CanUpdateRequest) (resp *
 }
 
 func main() {
+	var (
+		opts []grpc.ServerOption
+	)
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		grpclog.Fatal(err)
@@ -107,7 +133,21 @@ func main() {
 	if err != nil {
 		grpclog.Fatal(err)
 	}
-	s := grpc.NewServer(grpc.Creds(creds))
+	opts = append(opts, grpc.Creds(creds))
+
+	// 注册interceptor
+	var interceptor grpc.UnaryServerInterceptor
+	interceptor = func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+		err = auth(ctx)
+		if err != nil {
+			return
+		}
+		// 继续处理其他请求
+		return handler(ctx, req)
+	}
+	opts = append(opts, grpc.UnaryInterceptor(interceptor))
+
+	s := grpc.NewServer(opts...)
 	pb.RegisterGreeterServer(s, &server{})
 	pb.RegisterUserServer(s, &user{})
 	grpclog.Infof("Listen on %s with TLS", port)

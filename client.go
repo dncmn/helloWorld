@@ -20,7 +20,8 @@ type customCredential struct{}
 
 func (c customCredential) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
 	return map[string]string{
-		"appuid": "100",
+		//"appuid": "1000", // error
+		"appuid": "100", // success
 		"appkey": "i am key",
 	}, nil
 }
