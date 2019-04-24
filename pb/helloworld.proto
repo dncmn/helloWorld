@@ -35,13 +35,13 @@ message CanUpdateRequest{
     string username = 1;
 }
 message CanUpdateReply{
-    bool canUpdate = 1;
+    bool can_update = 1;
 }
 
 
 message CanSetRequest{}
 message CanSetReply{
-    bool canSet=1;
+    bool can_set=1;
 }
 
 
