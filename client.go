@@ -12,16 +12,47 @@ import (
 const (
 	address     = "127.0.0.1:50051"
 	defaultName = "world"
+	// OpenTLS 是否开启TLS认证
+	OpenTLS = true
 )
 
-func main() {
+type customCredential struct{}
 
-	// TLS连接
-	creds, err := credentials.NewClientTLSFromFile("./ssl/server.pem", "CN")
-	if err != nil {
-		grpclog.Fatal(err)
+func (c customCredential) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+	return map[string]string{
+		"appuid": "100",
+		"appkey": "i am key",
+	}, nil
+}
+
+func (c customCredential) RequireTransportSecurity() bool {
+	if OpenTLS {
+		return true
 	}
-	conn, err := grpc.Dial(address, grpc.WithTransportCredentials(creds))
+	return false
+}
+
+func main() {
+	var (
+		err  error
+		opts []grpc.DialOption
+	)
+
+	if OpenTLS {
+		// TLS连接
+		creds, err := credentials.NewClientTLSFromFile("./ssl/server.pem", "CN")
+		if err != nil {
+			grpclog.Fatal(err)
+		}
+		opts = append(opts, grpc.WithTransportCredentials(creds))
+	} else {
+		opts = append(opts, grpc.WithInsecure())
+	}
+
+	// 使用自定义认证
+	opts = append(opts, grpc.WithPerRPCCredentials(new(customCredential)))
+
+	conn, err := grpc.Dial(address, opts...)
 	if err != nil {
 		grpclog.Fatal(err)
 	}

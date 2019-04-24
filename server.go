@@ -5,8 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/grpclog"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 	pb "helloWorld/pb"
 	"net"
 	"strings"
@@ -50,7 +53,26 @@ func (s *server) CanSet(ctx context.Context, in *pb.CanSetRequest) (*pb.CanSetRe
 type user struct{}
 
 func (u *user) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.RegisterReply, error) {
-	return &pb.RegisterReply{Uid: "123456"}, nil
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, status.Errorf(codes.Unauthenticated, "无Token认证信息")
+	}
+	var (
+		appuid string
+		appkey string
+	)
+	if val, ok := md["appuid"]; ok {
+		appuid = val[0]
+	}
+	if val, ok := md["appkey"]; ok {
+		appkey = val[0]
+	}
+	if appuid != "100" || appkey != "i am key" {
+		return nil, status.Errorf(codes.Unauthenticated, "Token认证失败")
+	}
+
+	return &pb.RegisterReply{Uid: "token认证成功"}, nil
 }
 
 func (u *user) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginReply, error) {
