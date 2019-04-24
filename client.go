@@ -59,5 +59,15 @@ func main() {
 		return
 	}
 	fmt.Println(r.Uid)
+	switch  pb.Profile{}.Avatar.(type){
+	case *pb.Profile_ImageData:
+			fmt.Println("aaaaa")
+	case *pb.Profile_ImageUrl:
+			fmt.Println("bbbbb")
+	default:
+			fmt.Println("cccc")
+
+	}
+
 
 }
