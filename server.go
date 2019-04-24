@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 	pb "helloWorld/pb"
 	"net"
@@ -155,6 +156,8 @@ func main() {
 	pb.RegisterGreeterServer(s, &server{})
 	// 注册 UserService
 	pb.RegisterUserServer(s, &user{})
+	// Register reflection service on gRPC server.
+	reflection.Register(s)
 	grpclog.Infof("Listen on %s with TLS", port)
 
 	// 开启trace
