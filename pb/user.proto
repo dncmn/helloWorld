@@ -103,7 +103,7 @@ message Profile{
 }
 
 
-
+//  演示  key:value----> int32:map[int32]int32
 message SearchRequest{
     enum Corpus{
         UNIVERSAL=0;
@@ -111,4 +111,9 @@ message SearchRequest{
         IMAGES=2;
     }
     Corpus corpus=1;
+    map<int32,ListDate> list=2;
+}
+
+message ListDate{
+    map<int32,int32> list=1;
 }
